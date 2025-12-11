@@ -425,6 +425,7 @@ load_graph_draw (GtkDrawingArea* area,
 
   bool drawStacked = graph->type == LOAD_GRAPH_CPU && GsmApplication::get ().config.draw_stacked;
   bool drawSmooth = GsmApplication::get ().config.draw_smooth;
+  bool drawGlow = GsmApplication::get ().config.draw_glow;
   gsm_graph_set_smooth_chart (GSM_GRAPH (area), drawSmooth);
   gsm_graph_set_stacked_chart (GSM_GRAPH (area), drawStacked);
   
@@ -464,7 +465,10 @@ load_graph_draw (GtkDrawingArea* area,
       if (drawStacked)
         {
           // Save the current path (the top line) for the glow
-          cairo_path_t *line_path = cairo_copy_path (cr);
+          cairo_path_t *line_path = NULL;
+
+          if (drawGlow)
+            line_path = cairo_copy_path (cr);
 
           /* Draw the remaining outline of the area */
           /* Left bottom corner */
@@ -477,14 +481,20 @@ load_graph_draw (GtkDrawingArea* area,
           cairo_close_path (cr);
           cairo_fill (cr);
 
-          // Now draw the glow on the top line
-          cairo_append_path (cr, line_path);
-          draw_glow_stroke (cr, &(graph->colors [j]));
-          cairo_path_destroy (line_path);
+          if (drawGlow)
+            {
+              // Now draw the glow on the top line
+              cairo_append_path (cr, line_path);
+              draw_glow_stroke (cr, &(graph->colors [j]));
+              cairo_path_destroy (line_path);
+            }
         }
       else
         {
-          draw_glow_stroke (cr, &(graph->colors [j]));
+          if (drawGlow)
+            draw_glow_stroke (cr, &(graph->colors [j]));
+          else
+            cairo_stroke (cr);
         }
     }
 }

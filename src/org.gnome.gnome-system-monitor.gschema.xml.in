@@ -250,6 +250,15 @@
       </description>
     </key>
 
+    <key name="glow-effect" type="b">
+      <default>true
+      </default>
+      <summary>Show CPU, Memory, Network, and Disk charts as with a neon glow effect
+      </summary>
+      <description>If TRUE, system-monitor shows the CPU, Memory, Network, and Disk charts as graphs with a neon glow effect.
+      </description>
+    </key>
+
     <key name="resources-memory-in-iec" type="b">
       <default>false
       </default>
