@@ -41,6 +41,7 @@ struct ProcConfig
     logarithmic_scale (false),
     draw_stacked (false),
     draw_smooth (true),
+    draw_glow (true),
     resources_memory_in_iec (true),
     network_in_bits (false),
     network_total_in_bits (false)
@@ -67,6 +68,7 @@ struct ProcConfig
   bool logarithmic_scale;
   bool draw_stacked;
   bool draw_smooth;
+  bool draw_glow;
   bool resources_memory_in_iec;
   bool network_in_bits;
   bool network_total_in_bits;

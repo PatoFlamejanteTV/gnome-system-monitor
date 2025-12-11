@@ -304,10 +304,22 @@ found_mount (GObject *source, GAsyncResult *result, gpointer user_data)
 
   if (!icon) {
     g_autofree char *path = g_file_get_path (self->directory);
+#if GLIB_CHECK_VERSION(2, 84, 0)
     g_autoptr (GUnixMountEntry) entry =
       g_unix_mount_entry_at (path, NULL);
+#else
+    GUnixMountEntry *entry = g_unix_mount_at (path, NULL);
+#endif
     if (entry) {
+#if GLIB_CHECK_VERSION(2, 84, 0)
       icon = g_unix_mount_entry_guess_icon (entry);
+#else
+      icon = g_unix_mount_guess_icon (entry);
+#endif
+
+#if !GLIB_CHECK_VERSION(2, 84, 0)
+      g_unix_mount_free (entry);
+#endif
     }
   }
 

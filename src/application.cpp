@@ -82,6 +82,18 @@ cb_draw_smooth_changed (Gio::Settings& settings,
 }
 
 static void
+cb_draw_glow_changed (Gio::Settings& settings,
+                      Glib::ustring  key,
+                      GsmApplication*app)
+{
+  app->config.draw_glow = settings.get_boolean (key);
+  app->cpu_graph->clear_background ();
+  app->mem_graph->clear_background ();
+  app->net_graph->clear_background ();
+  app->disk_graph->clear_background ();
+}
+
+static void
 cb_resources_memory_in_iec_changed (Gio::Settings& settings,
                                     Glib::ustring  key,
                                     GsmApplication*app)
@@ -281,6 +293,11 @@ GsmApplication::load_settings ()
   config.draw_smooth = this->settings->get_boolean (GSM_SETTING_DRAW_SMOOTH);
   this->settings->signal_changed (GSM_SETTING_DRAW_SMOOTH).connect ([this](const Glib::ustring&key) {
     cb_draw_smooth_changed (*this->settings.operator-> (), key, this);
+  });
+
+  config.draw_glow = this->settings->get_boolean (GSM_SETTING_GLOW_EFFECT);
+  this->settings->signal_changed (GSM_SETTING_GLOW_EFFECT).connect ([this](const Glib::ustring&key) {
+    cb_draw_glow_changed (*this->settings.operator-> (), key, this);
   });
 
   config.resources_memory_in_iec = this->settings->get_boolean (GSM_SETTING_RESOURCES_MEMORY_IN_IEC);

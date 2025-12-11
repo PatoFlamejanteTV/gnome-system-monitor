@@ -335,6 +335,32 @@ create_background (LoadGraph *graph,
 }
 
 static void
+draw_glow_stroke (cairo_t *cr, GdkRGBA *color)
+{
+  cairo_save (cr);
+
+  // Outer glow
+  GdkRGBA glow_color = *color;
+  glow_color.alpha *= 0.1;
+  gdk_cairo_set_source_rgba (cr, &glow_color);
+  cairo_set_line_width (cr, 7.0);
+  cairo_stroke_preserve (cr);
+
+  // Middle glow
+  glow_color.alpha = color->alpha * 0.3;
+  gdk_cairo_set_source_rgba (cr, &glow_color);
+  cairo_set_line_width (cr, 4.0);
+  cairo_stroke_preserve (cr);
+
+  // Core line
+  gdk_cairo_set_source_rgba (cr, color);
+  cairo_set_line_width (cr, 1.5);
+  cairo_stroke (cr);
+
+  cairo_restore (cr);
+}
+
+static void
 load_graph_draw (GtkDrawingArea* area,
                  cairo_t *cr,
                  int      width,
@@ -399,6 +425,7 @@ load_graph_draw (GtkDrawingArea* area,
 
   bool drawStacked = graph->type == LOAD_GRAPH_CPU && GsmApplication::get ().config.draw_stacked;
   bool drawSmooth = GsmApplication::get ().config.draw_smooth;
+  bool drawGlow = GsmApplication::get ().config.draw_glow;
   gsm_graph_set_smooth_chart (GSM_GRAPH (area), drawSmooth);
   gsm_graph_set_stacked_chart (GSM_GRAPH (area), drawStacked);
   
@@ -437,6 +464,12 @@ load_graph_draw (GtkDrawingArea* area,
 
       if (drawStacked)
         {
+          // Save the current path (the top line) for the glow
+          cairo_path_t *line_path = NULL;
+
+          if (drawGlow)
+            line_path = cairo_copy_path (cr);
+
           /* Draw the remaining outline of the area */
           /* Left bottom corner */
           cairo_rel_line_to (cr, 0, y_base + graph->real_draw_height);
@@ -447,10 +480,21 @@ load_graph_draw (GtkDrawingArea* area,
 
           cairo_close_path (cr);
           cairo_fill (cr);
+
+          if (drawGlow)
+            {
+              // Now draw the glow on the top line
+              cairo_append_path (cr, line_path);
+              draw_glow_stroke (cr, &(graph->colors [j]));
+              cairo_path_destroy (line_path);
+            }
         }
       else
         {
-          cairo_stroke (cr);
+          if (drawGlow)
+            draw_glow_stroke (cr, &(graph->colors [j]));
+          else
+            cairo_stroke (cr);
         }
     }
 }

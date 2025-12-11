@@ -36,6 +36,7 @@
 #define GSM_SETTING_LOGARITHMIC_SCALE       "logarithmic-scale"
 #define GSM_SETTING_DRAW_STACKED            "cpu-stacked-area-chart"
 #define GSM_SETTING_DRAW_SMOOTH             "cpu-smooth-graph"
+#define GSM_SETTING_GLOW_EFFECT             "glow-effect"
 #define GSM_SETTING_RESOURCES_MEMORY_IN_IEC "resources-memory-in-iec"
 #define GSM_SETTING_NETWORK_IN_BITS         "network-in-bits"
 #define GSM_SETTING_GRAPH_DATA_POINTS       "graph-data-points"
