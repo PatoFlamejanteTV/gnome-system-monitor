@@ -4,6 +4,8 @@
 
 #include <config.h>
 
+#include <vector>
+
 #include <glib/gi18n.h>
 #include <glibtop/procopenfiles.h>
 
@@ -43,36 +45,37 @@ format_title (G_GNUC_UNUSED GObject *object,
 }
 
 
-static inline void
-load_process_files (GPtrArray *files, ProcInfo *info)
-{
-  g_autofree glibtop_open_files_entry *entries = NULL;
-  glibtop_proc_open_files buf;
-
-  entries = glibtop_get_proc_open_files (&buf, info->pid);
-
-  for (unsigned i = 0; i != buf.number; ++i) {
-    if (entries[i].type & GLIBTOP_FILE_TYPE_FILE) {
-      g_ptr_array_add (files, gsm_open_file_new (info, entries + i));
-    }
-  }
-}
-
-
-typedef struct _LoadFilesData LoadFilesData;
-struct _LoadFilesData {
-  GPtrArray *processes;
+struct PidInfo {
+  pid_t pid;
+  gulong start_time;
 };
+
+struct LoadFilesData {
+  std::vector<PidInfo> processes;
+};
+
+struct CollectedFiles {
+  pid_t pid;
+  gulong start_time;
+  glibtop_open_files_entry *entries;
+  unsigned number;
+};
+
+
+static void
+collected_files_free (gpointer data)
+{
+  CollectedFiles *self = static_cast<CollectedFiles *>(data);
+
+  g_free (self->entries);
+  g_free (self);
+}
 
 
 static void
 load_files_data_free (gpointer data)
 {
-  LoadFilesData *self = static_cast<LoadFilesData *>(data);
-
-  g_clear_pointer (&self->processes, g_ptr_array_unref);
-
-  g_free (self);
+  delete static_cast<LoadFilesData *>(data);
 }
 
 
@@ -84,13 +87,22 @@ load_files_thread (GTask        *task,
 {
   LoadFilesData *data = static_cast<LoadFilesData *>(task_data);
   g_autoptr (GPtrArray) files =
-    g_ptr_array_new_null_terminated (data->processes->len * 10,
-                                     g_object_unref,
-                                     TRUE);
+    g_ptr_array_new_with_free_func (collected_files_free);
 
-  for (size_t i = 0; i < data->processes->len; i++) {
-    load_process_files (files,
-                        static_cast<ProcInfo *>(g_ptr_array_index (data->processes, i)));
+  for (const auto &p : data->processes) {
+    glibtop_proc_open_files buf;
+    glibtop_open_files_entry *entries = glibtop_get_proc_open_files (&buf, p.pid);
+
+    if (buf.number > 0) {
+      CollectedFiles *cf = g_new0 (CollectedFiles, 1);
+      cf->pid = p.pid;
+      cf->start_time = p.start_time;
+      cf->entries = entries;
+      cf->number = buf.number;
+      g_ptr_array_add (files, cf);
+    } else {
+      g_free (entries);
+    }
   }
 
   g_task_return_pointer (task,
@@ -114,16 +126,15 @@ load_files (GsmLsof             *self,
             gpointer             callback_data)
 {
   g_autoptr (GTask) task = g_task_new (self, NULL, callback, callback_data);
-  LoadFilesData *data = g_new0 (LoadFilesData, 1);
-
-  data->processes =
-    g_ptr_array_new_null_terminated (1000, NULL, TRUE);
+  LoadFilesData *data = new LoadFilesData ();
 
   g_task_set_name (task, "load_files");
   g_task_set_task_data (task, data, load_files_data_free);
 
+  data->processes.reserve (1000);
+
   for (auto &v : GsmApplication::get().processes) {
-    g_ptr_array_add (data->processes, &v.second);
+    data->processes.push_back ({ v.second.pid, v.second.start_time });
   }
 
   g_task_run_in_thread (task, load_files_thread);
@@ -135,12 +146,27 @@ did_load (GObject *source, GAsyncResult *result, gpointer user_data)
 {
   GsmLsof *self = GSM_LSOF (source);
   g_autoptr (GError) error = NULL;
-  g_autoptr (GPtrArray) files = load_files_finish (self, result, &error);
+  g_autoptr (GPtrArray) results = load_files_finish (self, result, &error);
   guint old_length = g_list_model_get_n_items (G_LIST_MODEL (self->lsof_store));
 
   if (error) {
     g_warning ("Failed to refresh lsof: %s", error->message);
     return;
+  }
+
+  g_autoptr (GPtrArray) files = g_ptr_array_new_with_free_func (g_object_unref);
+
+  for (guint i = 0; i < results->len; i++) {
+    CollectedFiles *cf = static_cast<CollectedFiles *>(g_ptr_array_index (results, i));
+    ProcInfo *info = GsmApplication::get ().processes.find (cf->pid);
+
+    if (info && info->start_time == cf->start_time) {
+      for (unsigned j = 0; j < cf->number; j++) {
+        if (cf->entries[j].type & GLIBTOP_FILE_TYPE_FILE) {
+          g_ptr_array_add (files, gsm_open_file_new (info, &cf->entries[j]));
+        }
+      }
+    }
   }
 
   g_list_store_splice (self->lsof_store,
