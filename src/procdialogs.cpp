@@ -32,8 +32,7 @@
 #include "procactions.h"
 #include "procinfo.h"
 #include "util.h"
-#include "gsm_gnomesu.h"
-#include "gsm_gksu.h"
+#include "legacy/gsm_su.h"
 #include "gsm_pkexec.h"
 #include "cgroups.h"
 

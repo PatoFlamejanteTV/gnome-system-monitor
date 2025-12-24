@@ -2,6 +2,7 @@
 libgsm_legacy_sources = [
   'e_date.c',
   'gsm_color_button.c',
+  'gsm_su.cpp',
   'treeview.c',
 ]
 
