@@ -364,6 +364,7 @@ proctable_new (GsmApplication * const app)
     N_("Disk Read"),
     N_("Disk Write"),
     N_("Priority"),
+    N_("CWD"),
     NULL,
     "POINTER"
   };
@@ -398,6 +399,7 @@ proctable_new (GsmApplication * const app)
                               G_TYPE_UINT64,        /* Disk read    */
                               G_TYPE_UINT64,        /* Disk write   */
                               G_TYPE_STRING,        /* Priority     */
+                              G_TYPE_STRING,        /* CWD          */
                               GDK_TYPE_TEXTURE,     /* Icon         */
                               G_TYPE_POINTER,       /* ProcInfo     */
                               G_TYPE_STRING         /* Sexy tooltip */
@@ -441,7 +443,7 @@ proctable_new (GsmApplication * const app)
 
   gtk_tree_view_column_set_expand (column, TRUE);
 
-  for (i = COL_USER; i <= COL_PRIORITY; i++)
+  for (i = COL_USER; i <= COL_CWD; i++)
     {
       GtkWidget *box;
       GtkWidget *title_label;
@@ -639,6 +641,7 @@ proctable_new (GsmApplication * const app)
       switch (i)
         {
           case COL_ARGS:
+          case COL_CWD:
             gtk_tree_view_column_set_min_width (col, 150);
             break;
 
@@ -647,7 +650,7 @@ proctable_new (GsmApplication * const app)
             break;
         }
 
-      if (i == COL_ARGS)
+      if (i == COL_ARGS || i == COL_CWD)
         gtk_tree_view_column_set_expand (col, TRUE);
       else
         gtk_tree_view_column_set_expand (col, FALSE);
@@ -784,6 +787,7 @@ update_info_mutable_cols (ProcInfo *info)
   tree_store_update (model, &info->node, COL_SESSION, info->session.c_str ());
   tree_store_update (model, &info->node, COL_SEAT, info->seat.c_str ());
   tree_store_update (model, &info->node, COL_OWNER, info->owner.c_str ());
+  tree_store_update (model, &info->node, COL_CWD, info->cwd.c_str ());
 }
 
 static void
@@ -848,6 +852,7 @@ insert_info_to_tree (ProcInfo       *info,
                       COL_TOOLTIP, info->tooltip.c_str (),
                       COL_PID, info->pid,
                       COL_SECURITYCONTEXT, info->security_context.c_str (),
+                      COL_CWD, info->cwd.c_str (),
                       -1);
 
   app->pretty_table->set_icon (*info);

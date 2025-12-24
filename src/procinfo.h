@@ -60,6 +60,7 @@ struct MutableProcInfo
   std::string seat;
 
   std::string owner;
+  std::string cwd;
 };
 
 
