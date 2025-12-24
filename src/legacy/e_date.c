@@ -61,9 +61,6 @@ e_strftime (char            *s,
  *
  * The function itself is a front end on strftime and takes exactly
  * the same arguments.
- *
- * TODO: Actually remove the '%p' from the fixed up string so that
- * there isn't a stray space.
  **/
 
 static size_t
@@ -110,6 +107,23 @@ e_strftime_fix_am_pm (char            *s,
             sp[1] = 'H';
           for (sp = ffmt; (sp = strstr (sp, "%I")); sp++)
             sp[1] = 'H';
+          while ((sp = strstr (ffmt, "%p")))
+            {
+               /* Remove %p and any preceding whitespace */
+               if (sp > ffmt && sp[-1] == ' ')
+                 memmove (sp - 1, sp + 2, strlen (sp + 2) + 1);
+               else
+                 memmove (sp, sp + 2, strlen (sp + 2) + 1);
+            }
+          while ((sp = strstr (ffmt, "%P")))
+            {
+               /* Remove %P and any preceding whitespace */
+               if (sp > ffmt && sp[-1] == ' ')
+                 memmove (sp - 1, sp + 2, strlen (sp + 2) + 1);
+               else
+                 memmove (sp, sp + 2, strlen (sp + 2) + 1);
+            }
+
           ret = e_strftime (s, max, ffmt, tm);
           g_free (ffmt);
         }

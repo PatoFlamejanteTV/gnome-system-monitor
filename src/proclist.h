@@ -7,10 +7,11 @@
 
 class ProcList
 {
-  // TODO: use a set instead
-  // sorted by pid. The map has a nice property : it is sorted
+  // Sorted by pid. The map has a nice property : it is sorted
   // by pid so this helps a lot when looking for the parent node
   // as ppid is nearly always < pid.
+  // NOTE: std::map is used instead of std::set because ProcInfo needs to be
+  // mutable (it is updated in place) and std::set iterators are const.
   typedef std::map<pid_t, ProcInfo> List;
   List data;
   std::mutex data_lock;

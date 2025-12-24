@@ -545,16 +545,35 @@ create_single_memmaps_dialog (GtkTreeModel *model,
   gtk_window_present (GTK_WINDOW (memmaps_view));
 }
 
+struct OpenDialogData {
+  gpointer app;
+  int count;
+};
+
+static void
+create_single_memmaps_dialog_limited (GtkTreeModel *model,
+                                      GtkTreePath  *path,
+                                      GtkTreeIter  *iter,
+                                      gpointer      data)
+{
+  OpenDialogData *odd = static_cast<OpenDialogData*>(data);
+  if (odd->count >= 3)
+    return;
+
+  create_single_memmaps_dialog (model, path, iter, odd->app);
+  odd->count++;
+}
+
 static void
 on_activate_memory_maps (GSimpleAction *,
                          GVariant *,
                          gpointer data)
 {
   GsmApplication *app = (GsmApplication *) data;
+  OpenDialogData odd = { NULL, 0 };
 
-  /* TODO: do we really want to open multiple dialogs ? */
-  gtk_tree_selection_selected_foreach (app->selection, create_single_memmaps_dialog,
-                                       NULL);
+  gtk_tree_selection_selected_foreach (app->selection, create_single_memmaps_dialog_limited,
+                                       &odd);
 }
 
 
@@ -576,14 +595,29 @@ create_single_openfiles_dialog (GtkTreeModel *model,
 
 
 static void
+create_single_openfiles_dialog_limited (GtkTreeModel *model,
+                                        GtkTreePath  *path,
+                                        GtkTreeIter  *iter,
+                                        gpointer      data)
+{
+  OpenDialogData *odd = static_cast<OpenDialogData*>(data);
+  if (odd->count >= 3)
+    return;
+
+  create_single_openfiles_dialog (model, path, iter, odd->app);
+  odd->count++;
+}
+
+static void
 on_activate_open_files (GSimpleAction *,
                         GVariant *,
                         gpointer data)
 {
   GsmApplication *app = (GsmApplication *) data;
+  OpenDialogData odd = { app, 0 };
 
-  gtk_tree_selection_selected_foreach (app->selection, create_single_openfiles_dialog,
-                                       app);
+  gtk_tree_selection_selected_foreach (app->selection, create_single_openfiles_dialog_limited,
+                                       &odd);
 }
 
 static void
