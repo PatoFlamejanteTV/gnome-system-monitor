@@ -130,6 +130,11 @@ fill_proc_properties (GtkBuilder *builder,
   adw_action_row_set_subtitle (row, text);
   g_free (text);
 
+  row = ADW_ACTION_ROW (gtk_builder_get_object (builder, "cwd_row"));
+  text = g_strdup_printf ("%s", info->cwd.c_str ());
+  adw_action_row_set_subtitle (row, text);
+  g_free (text);
+
   row = ADW_ACTION_ROW (gtk_builder_get_object (builder, "waitingchannel_row"));
   text = g_strdup_printf ("%s", info->wchan.c_str ());
   adw_action_row_set_subtitle (row, text);

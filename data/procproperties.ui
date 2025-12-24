@@ -233,6 +233,16 @@
                   </object>
                 </child>
                 <child>
+                  <object class="AdwActionRow" id="cwd_row">
+                    <property name="title" translatable="yes">Current Working Directory</property>
+                    <property name="subtitle-selectable">True</property>
+                    <style>
+                      <class name="property"/>
+                      <class name="numeric" />
+                    </style>
+                  </object>
+                </child>
+                <child>
                   <object class="AdwActionRow" id="commandline_row">
                     <property name="title" translatable="yes">Command Line</property>
                     <property name="subtitle-selectable">True</property>

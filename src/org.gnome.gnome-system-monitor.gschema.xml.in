@@ -662,6 +662,19 @@
       </summary>
     </key>
 
+    <key name="col-27-width" type="i">
+      <default>100
+      </default>
+      <summary>Width of process “CWD” column
+      </summary>
+    </key>
+
+    <key name="col-27-visible" type="b">
+      <default>false
+      </default>
+      <summary>Show process “CWD” column on startup
+      </summary>
+    </key>
 
   </schema>
 

@@ -125,6 +125,11 @@ ProcInfo::ProcInfo(pid_t pid)
   get_process_cgroup_info (*info);
 
   get_process_systemd_info (info);
+
+  g_autofree char *proc_cwd_path = g_strdup_printf ("/proc/%d/cwd", pid);
+  g_autofree char *cwd_path = g_file_read_link (proc_cwd_path, NULL);
+  if (cwd_path)
+    info->cwd = cwd_path;
 }
 
 void
